@@ -1,0 +1,220 @@
+{{! 首页 }}
+<div class="hero-section bg-primary text-white py-5 mb-5 rounded">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h1 class="display-4 fw-bold">企业应用架构模式演示</h1>
+        <p class="lead">
+          基于《企业应用架构模式》一书构建的完整电商系统演示，
+          展示了现代企业级应用开发中的各种架构模式和最佳实践。
+        </p>
+        <div class="mt-4">
+          <a href="/products" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-shopping-bag me-2"></i>
+            浏览产品
+          </a>
+          <a href="/architecture" class="btn btn-outline-light btn-lg">
+            <i class="fas fa-info-circle me-2"></i>
+            了解架构
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-4 text-center">
+        <i class="fas fa-store fa-6x opacity-75"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 特色功能 -->
+<div class="row mb-5">
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body text-center">
+        <div class="text-primary mb-3">
+          <i class="fas fa-layer-group fa-3x"></i>
+        </div>
+        <h5 class="card-title">分层架构</h5>
+        <p class="card-text">
+          演示表现层、业务层、数据访问层的清晰分离， 每层都有明确的职责和边界。
+        </p>
+        <a href="/docs/architecture#layers" class="btn btn-outline-primary">
+          了解更多
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body text-center">
+        <div class="text-success mb-3">
+          <i class="fas fa-cube fa-3x"></i>
+        </div>
+        <h5 class="card-title">领域模型</h5>
+        <p class="card-text">
+          使用富领域模型封装业务逻辑， 展示User、Product、Order等核心业务对象。
+        </p>
+        <a href="/docs/architecture#domain" class="btn btn-outline-success">
+          查看示例
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body text-center">
+        <div class="text-warning mb-3">
+          <i class="fas fa-database fa-3x"></i>
+        </div>
+        <h5 class="card-title">数据映射</h5>
+        <p class="card-text">
+          实现Data Mapper模式， 将对象模型与关系数据库映射分离。
+        </p>
+        <a href="/docs/architecture#data" class="btn btn-outline-warning">
+          查看代码
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 架构模式概览 -->
+<div class="card mb-5">
+  <div class="card-header bg-light">
+    <h3 class="mb-0">
+      <i class="fas fa-sitemap me-2"></i>
+      实现的架构模式
+    </h3>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5 class="text-primary">
+          <i class="fas fa-cogs me-2"></i>
+          领域逻辑模式
+        </h5>
+        <ul class="list-unstyled ms-3">
+          <li><i class="fas fa-check text-success me-2"></i>Domain Model -
+            领域模型</li>
+          <li><i class="fas fa-check text-success me-2"></i>Active Record -
+            活动记录</li>
+          <li><i class="fas fa-check text-success me-2"></i>Table Module -
+            表模块</li>
+        </ul>
+
+        <h5 class="text-primary mt-4">
+          <i class="fas fa-database me-2"></i>
+          数据源架构模式
+        </h5>
+        <ul class="list-unstyled ms-3">
+          <li><i class="fas fa-check text-success me-2"></i>Data Mapper -
+            数据映射器</li>
+          <li><i class="fas fa-check text-success me-2"></i>Table Data Gateway -
+            表数据入口</li>
+          <li><i class="fas fa-check text-success me-2"></i>Row Data Gateway -
+            行数据入口</li>
+        </ul>
+      </div>
+
+      <div class="col-md-6">
+        <h5 class="text-primary">
+          <i class="fas fa-window-restore me-2"></i>
+          Web表现模式
+        </h5>
+        <ul class="list-unstyled ms-3">
+          <li><i class="fas fa-check text-success me-2"></i>Model View
+            Controller - MVC</li>
+          <li><i class="fas fa-check text-success me-2"></i>Page Controller -
+            页面控制器</li>
+          <li><i class="fas fa-check text-success me-2"></i>Front Controller -
+            前端控制器</li>
+          <li><i class="fas fa-check text-success me-2"></i>Template View -
+            模板视图</li>
+        </ul>
+
+        <h5 class="text-primary mt-4">
+          <i class="fas fa-puzzle-piece me-2"></i>
+          基础模式
+        </h5>
+        <ul class="list-unstyled ms-3">
+          <li><i class="fas fa-check text-success me-2"></i>Gateway - 网关</li>
+          <li><i class="fas fa-check text-success me-2"></i>Mapper - 映射器</li>
+          <li><i class="fas fa-check text-success me-2"></i>Layer Supertype -
+            层超类型</li>
+          <li><i class="fas fa-check text-success me-2"></i>Separated Interface
+            - 分离接口</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 技术栈 -->
+<div class="card">
+  <div class="card-header bg-dark text-white">
+    <h3 class="mb-0">
+      <i class="fas fa-tools me-2"></i>
+      技术栈
+    </h3>
+  </div>
+  <div class="card-body">
+    <div class="row text-center">
+      <div class="col-md-2 col-6 mb-3">
+        <div class="text-primary">
+          <i class="fab fa-node-js fa-2x"></i>
+        </div>
+        <small class="d-block mt-2 fw-bold">Node.js</small>
+      </div>
+      <div class="col-md-2 col-6 mb-3">
+        <div class="text-info">
+          <i class="fab fa-js-square fa-2x"></i>
+        </div>
+        <small class="d-block mt-2 fw-bold">TypeScript</small>
+      </div>
+      <div class="col-md-2 col-6 mb-3">
+        <div class="text-success">
+          <i class="fas fa-server fa-2x"></i>
+        </div>
+        <small class="d-block mt-2 fw-bold">Express</small>
+      </div>
+      <div class="col-md-2 col-6 mb-3">
+        <div class="text-primary">
+          <i class="fas fa-database fa-2x"></i>
+        </div>
+        <small class="d-block mt-2 fw-bold">PostgreSQL</small>
+      </div>
+      <div class="col-md-2 col-6 mb-3">
+        <div class="text-danger">
+          <i class="fas fa-memory fa-2x"></i>
+        </div>
+        <small class="d-block mt-2 fw-bold">Redis</small>
+      </div>
+      <div class="col-md-2 col-6 mb-3">
+        <div class="text-warning">
+          <i class="fas fa-code fa-2x"></i>
+        </div>
+        <small class="d-block mt-2 fw-bold">Handlebars</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{#unless currentUser}}
+  <!-- 快速开始 -->
+  <div class="text-center mt-5 p-4 bg-light rounded">
+    <h4>开始体验</h4>
+    <p class="text-muted">创建账户或使用演示账户登录，体验完整的电商功能</p>
+    <div>
+      <a href="/register" class="btn btn-primary me-3">
+        <i class="fas fa-user-plus me-2"></i>
+        立即注册
+      </a>
+      <a href="/login" class="btn btn-outline-primary">
+        <i class="fas fa-sign-in-alt me-2"></i>
+        演示登录
+      </a>
+    </div>
+  </div>
+{{/unless}}

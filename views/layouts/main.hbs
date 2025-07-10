@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Enterprise Architecture Patterns Demo</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .navbar-brand { font-weight: bold; }
+        .architecture-pattern {
+            border-left: 4px solid #007bff;
+            padding-left: 15px;
+            margin: 20px 0;
+        }
+        .pattern-header { color: #007bff; font-weight: 600; }
+        footer { background-color: #f8f9fa; margin-top: 50px; }
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+        }
+        .pattern-card { transition: transform 0.2s; }
+        .pattern-card:hover { transform: translateY(-5px); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    {{> navigation}}
+    
+    <!-- Main Content -->
+    <main role="main">
+        {{#if showHero}}
+        <section class="hero-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 mx-auto text-center">
+                        <h1 class="display-4 fw-bold">{{heroTitle}}</h1>
+                        <p class="lead">{{heroSubtitle}}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {{/if}}
+        
+        {{> flash-messages}}
+        
+        <div class="container mt-4">
+            {{{body}}}
+        </div>
+    </main>
+    
+    {{> footer}}
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
