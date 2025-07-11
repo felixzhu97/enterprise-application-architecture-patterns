@@ -10,7 +10,7 @@ import { csrfProtection } from "../middleware/csrf";
 import { rateLimiter } from "../middleware/rate-limiter";
 
 const productController = new ProductController();
-const router = Router();
+const router: Router = Router();
 
 // 公开路由
 router.get("/", productController.productList);

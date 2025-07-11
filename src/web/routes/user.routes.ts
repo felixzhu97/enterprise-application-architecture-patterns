@@ -16,7 +16,7 @@ const userController = new UserController(
   null as any
 );
 
-const router = Router();
+const router: Router = Router();
 
 // 公开路由
 router.get("/register", userController.registerPage);
