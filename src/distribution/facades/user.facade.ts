@@ -229,7 +229,7 @@ export class UserRemoteFacade implements UserFacade {
       });
 
       const userListItems = result.items.map(
-        (user) =>
+        (user: any) =>
           new UserListItemDTO(
             user.getId(),
             user.username,
@@ -270,7 +270,7 @@ export class UserRemoteFacade implements UserFacade {
       const users = await this.userRepository.search(keyword.trim(), limit);
 
       return users.map(
-        (user) =>
+        (user: any) =>
           new UserListItemDTO(
             user.getId(),
             user.username,

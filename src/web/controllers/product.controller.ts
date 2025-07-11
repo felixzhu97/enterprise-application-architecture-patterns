@@ -165,7 +165,10 @@ export class ProductController extends WebController {
         categories,
         csrfToken: req.csrfToken?.(),
         errors: req.flash("errors"),
-        formData: req.flash("formData")[0] || {},
+        formData:
+          req.flash("formData").length > 0
+            ? JSON.parse(req.flash("formData")[0])
+            : {},
       });
     });
   });
@@ -198,7 +201,7 @@ export class ProductController extends WebController {
         res.redirect("/admin/products");
       } catch (error) {
         req.flash("errors", [(error as Error).message]);
-        req.flash("formData", productData);
+        req.flash("formData", JSON.stringify(productData));
         res.redirect("/admin/products/create");
       }
     });

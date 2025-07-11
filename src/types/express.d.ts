@@ -3,7 +3,8 @@ import "express-session";
 declare global {
   namespace Express {
     interface Request {
-      flash(type: string, message?: string | string[]): string[] | void;
+      flash(type: string): string[];
+      flash(type: string, message: string | string[] | any): void;
       csrfToken?(): string;
     }
   }

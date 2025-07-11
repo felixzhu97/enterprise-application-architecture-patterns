@@ -35,7 +35,10 @@ export class UserController extends WebController {
         title: "用户注册",
         csrfToken: req.csrfToken?.(),
         errors: req.flash("errors"),
-        formData: req.flash("formData")[0] || {},
+        formData:
+          req.flash("formData").length > 0
+            ? JSON.parse(req.flash("formData")[0])
+            : {},
       });
     });
   });
@@ -64,7 +67,7 @@ export class UserController extends WebController {
         res.redirect("/login");
       } catch (error) {
         req.flash("errors", [(error as Error).message]);
-        req.flash("formData", registrationData);
+        req.flash("formData", JSON.stringify(registrationData));
         res.redirect("/register");
       }
     });

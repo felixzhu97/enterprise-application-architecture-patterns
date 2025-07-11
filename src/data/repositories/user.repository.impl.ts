@@ -13,7 +13,7 @@ import {
   PaginatedResult,
 } from "../../domain/repositories/user.repository";
 import { UserEntity } from "../../infrastructure/database/entities/user.entity";
-import { UserRecordMapper } from "../../patterns/base/mapper";
+import { UserEntityMapper } from "../mappers/user.mapper";
 import { AppDataSource } from "../../infrastructure/database/data-source";
 import { DataAccessObject } from "../../patterns/base/layer-supertype";
 
@@ -26,12 +26,12 @@ export class TypeORMUserRepository
   implements UserRepository
 {
   private repository: Repository<UserEntity>;
-  private mapper: UserRecordMapper;
+  private mapper: UserEntityMapper;
 
   constructor() {
     super();
     this.repository = AppDataSource.getRepository(UserEntity);
-    this.mapper = new UserRecordMapper();
+    this.mapper = new UserEntityMapper();
   }
 
   /**

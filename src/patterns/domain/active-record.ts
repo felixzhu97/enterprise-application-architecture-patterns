@@ -362,7 +362,7 @@ export abstract class ActiveRecord {
    * 根据ID查找记录
    */
   static async find<T extends ActiveRecord>(
-    this: new () => T,
+    this: new (data?: any) => T,
     id: string
   ): Promise<T | null> {
     const queryRunner = ActiveRecord.getDataSource().createQueryRunner();
@@ -394,7 +394,7 @@ export abstract class ActiveRecord {
    * 查找所有记录
    */
   static async findAll<T extends ActiveRecord>(
-    this: new () => T,
+    this: new (data?: any) => T,
     options?: { limit?: number; offset?: number; orderBy?: string }
   ): Promise<T[]> {
     const queryRunner = ActiveRecord.getDataSource().createQueryRunner();
@@ -432,7 +432,7 @@ export abstract class ActiveRecord {
    * 根据条件查找记录
    */
   static async findBy<T extends ActiveRecord>(
-    this: new () => T,
+    this: new (data?: any) => T,
     conditions: { [key: string]: any },
     options?: { limit?: number; offset?: number; orderBy?: string }
   ): Promise<T[]> {

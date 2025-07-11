@@ -239,10 +239,10 @@ export class PatternsShowcase {
 
       // 注册操作
       console.log("  注册新用户...");
-      unitOfWork.registerNew(user);
+      unitOfWork.registerNew(user as any);
 
       console.log("  修改用户信息...");
-      unitOfWork.registerDirty(user);
+      unitOfWork.registerDirty(user as any);
 
       // 获取统计信息
       const stats = unitOfWork.getStatistics();
@@ -408,7 +408,11 @@ export class PatternsShowcase {
     });
 
     const emailService = globalRegistry.get("emailService");
-    emailService?.send(customerEmail.toString(), "订单确认", "您的订单已创建");
+    (emailService as any)?.send(
+      customerEmail.toString(),
+      "订单确认",
+      "您的订单已创建"
+    );
 
     // 3. 使用 Identity Map 管理对象
     console.log("\n3. 对象身份管理（Identity Map）:");
@@ -421,9 +425,9 @@ export class PatternsShowcase {
       email: customerEmail.toString(),
     };
 
-    identityManager.put("User", user.getId(), user);
+    identityManager.put("User", user.getId(), user as any);
     const cachedUser = identityManager.get("User", "user-123");
-    console.log(`  ✓ 缓存用户: ${cachedUser?.username}`);
+    console.log(`  ✓ 缓存用户: ${(cachedUser as any)?.username}`);
 
     // 4. 计算订单金额（Value Object 操作）
     console.log("\n4. 订单计算（Value Object 操作）:");
