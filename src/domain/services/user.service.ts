@@ -316,7 +316,7 @@ export class UserDomainService extends ServiceObject {
    */
   private validateEmailToken(token: string): boolean {
     // 这里应该实现真正的令牌验证逻辑
-    return token && token.length > 10;
+    return Boolean(token && token.length > 10);
   }
 
   /**

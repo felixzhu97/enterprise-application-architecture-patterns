@@ -491,7 +491,7 @@ export class ServiceRegistry extends BasicRegistry {
   destroySingleton(key: string): void {
     const instance = this.singletons.get(key);
     if (instance) {
-      const factory = this.factories.get(key);
+      const factory = (this as any).factories.get(key);
       if (factory && factory.destroy) {
         factory.destroy(instance);
       }
@@ -627,7 +627,7 @@ export class RegistryExample {
 
     const user = this.userRegistry.get("currentUser");
     const theme = this.userRegistry.get("theme");
-    console.log("✓ 当前用户:", user?.name);
+    console.log("✓ 当前用户:", (user as any)?.name);
     console.log("✓ 主题:", theme);
 
     // 2. 工厂注册
@@ -640,7 +640,7 @@ export class RegistryExample {
     });
 
     const logger = this.userRegistry.get("logger");
-    logger?.log("这是一条测试日志");
+    (logger as any)?.log("这是一条测试日志");
 
     // 3. 服务注册表
     console.log("\n3. 服务注册表:");

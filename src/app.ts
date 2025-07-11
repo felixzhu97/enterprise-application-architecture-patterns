@@ -8,16 +8,16 @@ import helmet from "helmet";
 import cors from "cors";
 
 // 路由导入
-import { router as userRoutes } from "./web/routes/user.routes";
-import { router as productRoutes } from "./web/routes/product.routes";
-import { router as indexRoutes } from "./web/routes/index";
+import userRoutes from "./web/routes/user.routes";
+import productRoutes from "./web/routes/product.routes";
+import { setupRoutes } from "./web/routes/index";
 
 // 中间件导入
 import { errorHandler } from "./web/middleware/error-handler";
 import { csrfProtection } from "./web/middleware/csrf";
-import { sessionMiddleware } from "./web/middleware/session";
+import { setupSession } from "./web/middleware/session";
 import { rateLimiter } from "./web/middleware/rate-limiter";
-import { authMiddleware } from "./web/middleware/auth";
+import { optionalAuth } from "./web/middleware/auth";
 
 // 模式演示导入
 import { PatternsShowcase } from "./patterns/demo/patterns-showcase";
@@ -26,7 +26,7 @@ import { PatternsShowcase } from "./patterns/demo/patterns-showcase";
 import { logger } from "./infrastructure/config/logger";
 import { initializeDatabase } from "./infrastructure/database/data-source";
 
-const app = express();
+const app: express.Application = express();
 const PORT = process.env.PORT || 3000;
 
 // 视图引擎设置
@@ -116,14 +116,13 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // 会话管理
-app.use(sessionMiddleware);
+setupSession(app);
 
 // 应用级中间件
-app.use(rateLimiter);
-app.use(authMiddleware);
+app.use(optionalAuth);
 
 // 路由
-app.use("/", indexRoutes);
+setupRoutes(app);
 app.use("/users", userRoutes);
 app.use("/products", productRoutes);
 
@@ -241,7 +240,7 @@ app.get("/patterns", async (req, res) => {
 
     logger.info("企业应用架构模式演示完成");
   } catch (error) {
-    logger.error("模式演示失败:", error);
+    logger.error("模式演示失败:", error as Error);
     res.status(500).render("error", {
       title: "错误",
       message: "模式演示失败",
@@ -261,7 +260,7 @@ app.get("/api/patterns/stats", async (req, res) => {
       data: stats,
     });
   } catch (error) {
-    logger.error("获取模式统计失败:", error);
+    logger.error("获取模式统计失败:", error as Error);
     res.status(500).json({
       success: false,
       error: "获取模式统计失败",
@@ -309,7 +308,7 @@ async function startServer() {
         await showcase.demonstrateAllPatterns();
         logger.info("✅ 企业应用架构模式演示完成");
       } catch (error) {
-        logger.error("❌ 模式演示失败:", error);
+        logger.error("❌ 模式演示失败:", error as Error);
       }
     }, 1000);
 
@@ -364,7 +363,7 @@ async function startServer() {
       });
     });
   } catch (error) {
-    logger.error("启动服务器失败:", error);
+    logger.error("启动服务器失败:", error as Error);
     process.exit(1);
   }
 }

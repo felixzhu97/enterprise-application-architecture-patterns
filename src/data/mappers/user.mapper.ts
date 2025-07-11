@@ -61,27 +61,59 @@ export class UserEntityMapper extends BidirectionalMapper<User, UserEntity> {
       entity.date_of_birth || undefined
     );
 
-    // 创建用户领域对象
-    const user = new User(
+    // 创建用户领域对象并使用静态工厂方法
+    const user = this.createUserFromEntity(
       entity.username,
       entity.email,
-      "", // 密码在映射时不传递原文
+      entity.password_hash,
       profile,
       entity.role as UserRole,
-      entity.id
+      entity.id,
+      entity.status as UserStatus,
+      entity.email_verified,
+      entity.last_login_at || undefined,
+      entity.failed_login_attempts,
+      entity.locked_until || undefined,
+      entity.version,
+      entity.created_at,
+      entity.updated_at
     );
 
-    // 设置私有属性（通过反射或友元访问）
-    // 这里使用类型断言来访问私有属性（仅用于演示）
-    (user as any)._passwordHash = entity.password_hash;
-    (user as any)._status = entity.status as UserStatus;
-    (user as any)._emailVerified = entity.email_verified;
-    (user as any)._lastLoginAt = entity.last_login_at || undefined;
-    (user as any)._failedLoginAttempts = entity.failed_login_attempts;
-    (user as any)._lockedUntil = entity.locked_until || undefined;
-    (user as any).version = entity.version;
-    (user as any).createdAt = entity.created_at;
-    (user as any).updatedAt = entity.updated_at;
+    return user;
+  }
+
+  /**
+   * 从实体数据创建用户对象的辅助方法
+   */
+  private createUserFromEntity(
+    username: string,
+    email: string,
+    passwordHash: string,
+    profile: UserProfile,
+    role: UserRole,
+    id: string,
+    status: UserStatus,
+    emailVerified: boolean,
+    lastLoginAt: Date | undefined,
+    failedLoginAttempts: number,
+    lockedUntil: Date | undefined,
+    version: number,
+    createdAt: Date,
+    updatedAt: Date
+  ): User {
+    // 先创建基本用户对象
+    const user = new User(username, email, "", profile, role, id);
+
+    // 使用类型断言访问私有属性进行设置
+    (user as any)._passwordHash = passwordHash;
+    (user as any)._status = status;
+    (user as any)._emailVerified = emailVerified;
+    (user as any)._lastLoginAt = lastLoginAt;
+    (user as any)._failedLoginAttempts = failedLoginAttempts;
+    (user as any)._lockedUntil = lockedUntil;
+    (user as any).version = version;
+    (user as any).createdAt = createdAt;
+    (user as any).updatedAt = updatedAt;
 
     return user;
   }

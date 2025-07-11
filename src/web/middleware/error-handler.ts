@@ -30,8 +30,8 @@ export class AppError extends Error {
  * 业务逻辑错误
  */
 export class BusinessError extends AppError {
-  constructor(message: string) {
-    super(message, 400);
+  constructor(message: string, statusCode: number = 400) {
+    super(message, statusCode);
   }
 }
 

@@ -171,16 +171,26 @@ export abstract class DataAccessObject {
  */
 export abstract class WebController {
   /**
+   * 异步处理器装饰器
+   */
+  protected asyncHandler(fn: (req: any, res: any, next?: any) => Promise<any>) {
+    return (req: any, res: any, next: any) => {
+      Promise.resolve(fn(req, res, next)).catch(next);
+    };
+  }
+
+  /**
    * 处理请求的通用逻辑
    */
   protected handleRequest<T>(
     request: any,
     response: any,
+    actionName: string,
     action: () => Promise<T>
   ): Promise<void> {
     return this.executeWithErrorHandling(async () => {
       // 记录请求
-      this.logRequest(request);
+      this.logRequest(request, actionName);
 
       // 验证请求
       this.validateRequest(request);
@@ -210,9 +220,10 @@ export abstract class WebController {
   /**
    * 记录请求日志
    */
-  private logRequest(request: any): void {
+  private logRequest(request: any, actionName?: string): void {
     const timestamp = new Date().toISOString();
-    console.log(`[${timestamp}] ${request.method} ${request.url}`);
+    const action = actionName ? ` [${actionName}]` : "";
+    console.log(`[${timestamp}] ${request.method} ${request.url}${action}`);
   }
 
   /**

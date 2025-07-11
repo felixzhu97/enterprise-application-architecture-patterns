@@ -78,8 +78,10 @@ export class SessionManager {
   private async initializeRedis(): Promise<void> {
     try {
       this.redisClient = createClient({
-        host: process.env.REDIS_HOST || "localhost",
-        port: parseInt(process.env.REDIS_PORT || "6379", 10),
+        socket: {
+          host: process.env.REDIS_HOST || "localhost",
+          port: parseInt(process.env.REDIS_PORT || "6379", 10),
+        },
         password: process.env.REDIS_PASSWORD || undefined,
       });
 
@@ -170,24 +172,26 @@ export const sessionManager = new SessionManager();
  * 设置会话中间件
  */
 export function setupSession(app: Application): void {
-  // 创建 Redis 存储
-  const RedisStore = ConnectRedis(session);
-
+  // 创建 Redis 客户端
   const redisClient = createClient({
-    host: process.env.REDIS_HOST || "localhost",
-    port: parseInt(process.env.REDIS_PORT || "6379", 10),
+    socket: {
+      host: process.env.REDIS_HOST || "localhost",
+      port: parseInt(process.env.REDIS_PORT || "6379", 10),
+    },
     password: process.env.REDIS_PASSWORD || undefined,
-    legacyMode: true,
   });
 
-  redisClient.connect().catch((err) => {
+  redisClient.connect().catch((err: any) => {
     logger.error("Session Redis 连接失败", err);
   });
+
+  // 创建 Redis 存储
+  const redisStore = new (ConnectRedis as any)(session);
 
   // 配置会话中间件
   app.use(
     session({
-      store: new RedisStore({ client: redisClient }),
+      store: new redisStore({ client: redisClient }),
       secret: process.env.SESSION_SECRET || "default-secret-key",
       name: "ecommerce.session",
       resave: false,
@@ -204,13 +208,13 @@ export function setupSession(app: Application): void {
 
   // 会话活动跟踪中间件
   app.use((req, res, next) => {
-    if (req.session && req.session.userId) {
+    if (req.session && req.session.user) {
       // 更新最后活动时间
       (req.session as any).lastActivity = new Date();
 
       // 记录用户活动
       logger.debug("用户会话活动", {
-        userId: req.session.userId,
+        userId: req.session.user.id,
         ip: req.ip,
         userAgent: req.get("User-Agent"),
         url: req.url,
