@@ -1,205 +1,375 @@
-import "reflect-metadata";
 import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import morgan from "morgan";
-import dotenv from "dotenv";
 import { engine } from "express-handlebars";
 import path from "path";
+import session from "express-session";
+import cookieParser from "cookie-parser";
+import { rateLimit } from "express-rate-limit";
+import helmet from "helmet";
+import cors from "cors";
 
-import { AppDataSource } from "./infrastructure/database/data-source";
-import { setupRoutes } from "./web/routes";
+// 路由导入
+import { router as userRoutes } from "./web/routes/user.routes";
+import { router as productRoutes } from "./web/routes/product.routes";
+import { router as indexRoutes } from "./web/routes/index";
+
+// 中间件导入
 import { errorHandler } from "./web/middleware/error-handler";
-import { setupSession } from "./web/middleware/session";
+import { csrfProtection } from "./web/middleware/csrf";
+import { sessionMiddleware } from "./web/middleware/session";
+import { rateLimiter } from "./web/middleware/rate-limiter";
+import { authMiddleware } from "./web/middleware/auth";
+
+// 模式演示导入
+import { PatternsShowcase } from "./patterns/demo/patterns-showcase";
+
+// 配置和实用程序
 import { logger } from "./infrastructure/config/logger";
+import { initializeDatabase } from "./infrastructure/database/data-source";
 
-// 加载环境变量
-dotenv.config();
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-/**
- * 企业应用架构模式演示应用
- *
- * 这个应用演示了《企业应用架构模式》一书中的各种架构模式：
- * - Domain Model（领域模型）
- * - Data Mapper（数据映射器）
- * - Unit of Work（工作单元）
- * - Identity Map（身份映射）
- * - MVC（模型-视图-控制器）
- * - Remote Facade（远程外观）
- * - 以及更多模式...
- */
-class Application {
-  private app: express.Application;
-  private port: number;
+// 视图引擎设置
+app.engine(
+  "hbs",
+  engine({
+    extname: ".hbs",
+    defaultLayout: "main",
+    layoutsDir: path.join(__dirname, "../views/layouts"),
+    partialsDir: path.join(__dirname, "../views/partials"),
+    helpers: {
+      // 自定义Handlebars helpers
+      formatDate: (date: Date) => {
+        return date.toLocaleDateString("zh-CN");
+      },
+      formatCurrency: (amount: number) => {
+        return `¥${amount.toFixed(2)}`;
+      },
+      eq: (a: any, b: any) => a === b,
+      ne: (a: any, b: any) => a !== b,
+      gt: (a: number, b: number) => a > b,
+      lt: (a: number, b: number) => a < b,
+      and: (a: any, b: any) => a && b,
+      or: (a: any, b: any) => a || b,
+      not: (a: any) => !a,
+      json: (obj: any) => JSON.stringify(obj),
+      times: (n: number, options: any) => {
+        let result = "";
+        for (let i = 0; i < n; i++) {
+          result += options.fn(i);
+        }
+        return result;
+      },
+    },
+  })
+);
 
-  constructor() {
-    this.app = express();
-    this.port = parseInt(process.env.PORT || "3000", 10);
-    this.setupMiddleware();
-    this.setupTemplateEngine();
-    this.setupRoutes();
-    this.setupErrorHandling();
-  }
+app.set("view engine", "hbs");
+app.set("views", path.join(__dirname, "../views"));
 
-  /**
-   * 配置中间件
-   * 演示了 Layer Supertype 模式 - 为所有请求提供通用功能
-   */
-  private setupMiddleware(): void {
-    // 安全中间件
-    this.app.use(helmet());
+// 基础中间件
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+        scriptSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://cdnjs.cloudflare.com",
+        ],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
-    // CORS支持
-    this.app.use(
-      cors({
-        origin:
-          process.env.NODE_ENV === "production"
-            ? false
-            : ["http://localhost:3000", "http://localhost:3001"],
-        credentials: true,
-      })
-    );
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    credentials: true,
+  })
+);
 
-    // 日志中间件
-    this.app.use(
-      morgan("combined", {
-        stream: { write: (message) => logger.info(message.trim()) },
-      })
-    );
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cookieParser());
 
-    // 请求解析中间件
-    this.app.use(express.json({ limit: "10mb" }));
-    this.app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// 静态文件服务
+app.use(express.static(path.join(__dirname, "../public")));
 
-    // 静态文件服务
-    this.app.use("/static", express.static(path.join(__dirname, "../public")));
+// 速率限制
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15分钟
+  max: 100, // 每个IP最多100个请求
+  message: "请求过于频繁，请稍后再试",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
-    // 会话中间件 - 演示 Session State 模式
-    setupSession(this.app);
-  }
+// 会话管理
+app.use(sessionMiddleware);
 
-  /**
-   * 配置模板引擎
-   * 演示了 Template View 模式
-   */
-  private setupTemplateEngine(): void {
-    this.app.engine(
-      "handlebars",
-      engine({
-        defaultLayout: "main",
-        layoutsDir: path.join(__dirname, "../views/layouts"),
-        partialsDir: path.join(__dirname, "../views/partials"),
-        helpers: {
-          json: (context: any) => JSON.stringify(context),
-          eq: (a: any, b: any) => a === b,
-          formatCurrency: (amount: number) => `¥${amount.toFixed(2)}`,
-          formatDate: (date: Date) => date.toLocaleDateString("zh-CN"),
+// 应用级中间件
+app.use(rateLimiter);
+app.use(authMiddleware);
+
+// 路由
+app.use("/", indexRoutes);
+app.use("/users", userRoutes);
+app.use("/products", productRoutes);
+
+// 企业应用架构模式演示路由
+app.get("/patterns", async (req, res) => {
+  try {
+    logger.info("开始企业应用架构模式演示");
+
+    // 创建模式演示实例
+    const showcase = new PatternsShowcase();
+
+    // 运行所有模式的演示
+    await showcase.demonstrateAllPatterns();
+
+    // 获取实现统计
+    const stats = showcase.getImplementedPatternsStats();
+
+    res.render("patterns/showcase", {
+      title: "企业应用架构模式演示",
+      stats: stats,
+      categories: stats.categories,
+      implementedPatterns: [
+        {
+          name: "Unit of Work",
+          category: "数据源架构模式",
+          description: "维护受业务事务影响的对象列表并协调变更的写入",
+          implemented: true,
         },
-      })
-    );
+        {
+          name: "Identity Map",
+          category: "数据源架构模式",
+          description: "确保每个对象只被加载一次，维护对象身份一致性",
+          implemented: true,
+        },
+        {
+          name: "Lazy Load",
+          category: "数据源架构模式",
+          description: "按需加载关联对象，提高性能",
+          implemented: true,
+        },
+        {
+          name: "Active Record",
+          category: "领域逻辑模式",
+          description: "对象既包含数据又包含数据库访问逻辑",
+          implemented: true,
+        },
+        {
+          name: "Value Object",
+          category: "对象关系行为模式",
+          description: "如Money、Email等不可变值对象",
+          implemented: true,
+        },
+        {
+          name: "Registry",
+          category: "基础模式",
+          description: "全局对象查找机制",
+          implemented: true,
+        },
+        {
+          name: "Table Module",
+          category: "领域逻辑模式",
+          description: "为单个数据库表提供业务逻辑",
+          implemented: true,
+        },
+        {
+          name: "Table Data Gateway",
+          category: "数据源架构模式",
+          description: "为数据库表提供简单的访问接口",
+          implemented: true,
+        },
+        {
+          name: "Transaction Script",
+          category: "领域逻辑模式",
+          description: "将业务逻辑组织为单个过程",
+          implemented: true,
+        },
+        {
+          name: "Special Case",
+          category: "对象关系行为模式",
+          description: "处理特殊情况的对象",
+          implemented: true,
+        },
+        {
+          name: "Plugin",
+          category: "行为模式",
+          description: "支持可插拔的组件架构",
+          implemented: true,
+        },
+        {
+          name: "Service Stub",
+          category: "测试模式",
+          description: "用于测试的服务替身",
+          implemented: true,
+        },
+        {
+          name: "Optimistic Lock",
+          category: "并发模式",
+          description: "乐观并发控制",
+          implemented: true,
+        },
+        {
+          name: "Pessimistic Lock",
+          category: "并发模式",
+          description: "悲观并发控制",
+          implemented: true,
+        },
+        {
+          name: "Session State",
+          category: "会话状态模式",
+          description: "管理会话状态",
+          implemented: true,
+        },
+      ],
+    });
 
-    this.app.set("view engine", "handlebars");
-    this.app.set("views", path.join(__dirname, "../views"));
+    logger.info("企业应用架构模式演示完成");
+  } catch (error) {
+    logger.error("模式演示失败:", error);
+    res.status(500).render("error", {
+      title: "错误",
+      message: "模式演示失败",
+      error: error,
+    });
   }
+});
 
-  /**
-   * 配置路由
-   * 演示了 Front Controller 模式
-   */
-  private setupRoutes(): void {
-    setupRoutes(this.app);
+// API 路由 - 获取模式统计
+app.get("/api/patterns/stats", async (req, res) => {
+  try {
+    const showcase = new PatternsShowcase();
+    const stats = showcase.getImplementedPatternsStats();
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    logger.error("获取模式统计失败:", error);
+    res.status(500).json({
+      success: false,
+      error: "获取模式统计失败",
+    });
   }
+});
 
-  /**
-   * 配置错误处理
-   * 演示了统一错误处理策略
-   */
-  private setupErrorHandling(): void {
-    this.app.use(errorHandler);
-  }
+// 健康检查路由
+app.get("/health", (req, res) => {
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || "development",
+    version: process.env.npm_package_version || "1.0.0",
+  });
+});
 
-  /**
-   * 启动应用程序
-   */
-  public async start(): Promise<void> {
-    try {
-      // 初始化数据库连接
-      await AppDataSource.initialize();
-      logger.info("数据库连接已建立");
+// 错误处理中间件
+app.use(errorHandler);
 
-      // 启动HTTP服务器
-      this.app.listen(this.port, () => {
-        logger.info(`服务器运行在端口 ${this.port}`);
-        logger.info(`环境: ${process.env.NODE_ENV || "development"}`);
-        logger.info(`访问地址: http://localhost:${this.port}`);
+// 404 处理
+app.use((req, res) => {
+  res.status(404).render("error", {
+    title: "页面未找到",
+    message: `页面 ${req.originalUrl} 未找到`,
+    error: null,
+  });
+});
 
-        // 打印架构模式信息
-        this.printArchitectureInfo();
+// 应用启动
+async function startServer() {
+  try {
+    // 初始化数据库
+    logger.info("正在初始化数据库...");
+    await initializeDatabase();
+
+    // 启动模式演示
+    logger.info("正在启动企业应用架构模式演示...");
+    const showcase = new PatternsShowcase();
+
+    // 在后台运行演示（不阻塞服务器启动）
+    setTimeout(async () => {
+      try {
+        await showcase.demonstrateAllPatterns();
+        logger.info("✅ 企业应用架构模式演示完成");
+      } catch (error) {
+        logger.error("❌ 模式演示失败:", error);
+      }
+    }, 1000);
+
+    // 启动服务器
+    const server = app.listen(PORT, () => {
+      logger.info(`🚀 服务器已启动: http://localhost:${PORT}`);
+      logger.info(`📋 模式演示: http://localhost:${PORT}/patterns`);
+      logger.info(`🏥 健康检查: http://localhost:${PORT}/health`);
+      logger.info(`📊 模式统计: http://localhost:${PORT}/api/patterns/stats`);
+
+      // 打印实现的模式
+      const patterns = [
+        "Unit of Work",
+        "Identity Map",
+        "Lazy Load",
+        "Active Record",
+        "Value Object",
+        "Registry",
+        "Table Module",
+        "Table Data Gateway",
+        "Transaction Script",
+        "Special Case",
+        "Plugin",
+        "Service Stub",
+        "Optimistic Lock",
+        "Pessimistic Lock",
+        "Session State",
+      ];
+
+      logger.info("🎯 已实现的企业应用架构模式:");
+      patterns.forEach((pattern, index) => {
+        logger.info(`   ${index + 1}. ${pattern}`);
       });
-    } catch (error) {
-      logger.error("应用启动失败:", error);
-      process.exit(1);
-    }
-  }
 
-  /**
-   * 打印架构模式信息
-   */
-  private printArchitectureInfo(): void {
-    console.log("\n🏗️  企业应用架构模式演示");
-    console.log("=====================================");
-    console.log("📚 实现的架构模式:");
-    console.log("   • Domain Model (领域模型)");
-    console.log("   • Data Mapper (数据映射器)");
-    console.log("   • Unit of Work (工作单元)");
-    console.log("   • Identity Map (身份映射)");
-    console.log("   • MVC (模型-视图-控制器)");
-    console.log("   • Remote Facade (远程外观)");
-    console.log("   • Template View (模板视图)");
-    console.log("   • Front Controller (前端控制器)");
-    console.log("   • Gateway (网关)");
-    console.log("   • DTO (数据传输对象)");
-    console.log("   • 以及更多...");
-    console.log("=====================================\n");
-  }
+      logger.info("📖 基于 Martin Fowler 的《企业应用架构模式》");
+    });
 
-  /**
-   * 优雅关闭应用程序
-   */
-  public async shutdown(): Promise<void> {
-    logger.info("正在关闭应用程序...");
+    // 优雅关闭
+    process.on("SIGTERM", () => {
+      logger.info("收到 SIGTERM 信号，正在优雅关闭...");
+      server.close(() => {
+        logger.info("服务器已关闭");
+        process.exit(0);
+      });
+    });
 
-    if (AppDataSource.isInitialized) {
-      await AppDataSource.destroy();
-      logger.info("数据库连接已关闭");
-    }
-
-    logger.info("应用程序已关闭");
-    process.exit(0);
+    process.on("SIGINT", () => {
+      logger.info("收到 SIGINT 信号，正在优雅关闭...");
+      server.close(() => {
+        logger.info("服务器已关闭");
+        process.exit(0);
+      });
+    });
+  } catch (error) {
+    logger.error("启动服务器失败:", error);
+    process.exit(1);
   }
 }
-
-// 创建并启动应用程序
-const app = new Application();
-
-// 处理优雅关闭
-process.on("SIGTERM", () => app.shutdown());
-process.on("SIGINT", () => app.shutdown());
-
-// 处理未捕获的异常
-process.on("unhandledRejection", (reason, promise) => {
-  logger.error("未处理的Promise拒绝:", reason);
-  process.exit(1);
-});
-
-process.on("uncaughtException", (error) => {
-  logger.error("未捕获的异常:", error);
-  process.exit(1);
-});
 
 // 启动应用
-if (require.main === module) {
-  app.start();
-}
+startServer();
 
-export default app;
+export { app };
