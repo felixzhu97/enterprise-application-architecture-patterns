@@ -43,15 +43,29 @@ export const AppDataSource = new DataSource({
 /**
  * 初始化数据库连接
  */
-export async function initializeDatabase(): Promise<void> {
+export async function initializeDatabase(): Promise<boolean> {
   try {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
       console.log("✅ 数据库连接已建立");
+      return true;
     }
+    return true;
   } catch (error) {
-    console.error("❌ 数据库连接失败:", error);
-    throw error;
+    console.warn(
+      "⚠️  数据库连接失败，将在无数据库模式下运行:",
+      (error as Error).message
+    );
+    console.log("💡 提示：您可以配置以下环境变量来连接数据库：");
+    console.log("   DB_HOST=localhost");
+    console.log("   DB_PORT=5432");
+    console.log("   DB_USERNAME=postgres");
+    console.log("   DB_PASSWORD=your_password");
+    console.log("   DB_DATABASE=your_database");
+    console.log(
+      "   或者启动Docker容器：docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=password postgres"
+    );
+    return false;
   }
 }
 

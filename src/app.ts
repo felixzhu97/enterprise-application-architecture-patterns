@@ -296,7 +296,13 @@ async function startServer() {
   try {
     // 初始化数据库
     logger.info("正在初始化数据库...");
-    await initializeDatabase();
+    const dbConnected = await initializeDatabase();
+
+    if (dbConnected) {
+      logger.info("✅ 数据库模式已启用");
+    } else {
+      logger.info("🔄 演示模式已启用（无数据库）");
+    }
 
     // 启动模式演示
     logger.info("正在启动企业应用架构模式演示...");

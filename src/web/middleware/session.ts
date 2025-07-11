@@ -172,26 +172,45 @@ export const sessionManager = new SessionManager();
  * 设置会话中间件
  */
 export function setupSession(app: Application): void {
-  // 创建 Redis 客户端
-  const redisClient = createClient({
-    socket: {
-      host: process.env.REDIS_HOST || "localhost",
-      port: parseInt(process.env.REDIS_PORT || "6379", 10),
-    },
-    password: process.env.REDIS_PASSWORD || undefined,
-  });
+  // 检查是否有Redis配置，如果没有则使用内存存储
+  const useRedis = process.env.REDIS_HOST && process.env.REDIS_HOST !== "";
 
-  redisClient.connect().catch((err: any) => {
-    logger.error("Session Redis 连接失败", err);
-  });
+  let sessionStore: any;
 
-  // 创建 Redis 存储
-  const redisStore = new (ConnectRedis as any)(session);
+  if (useRedis) {
+    try {
+      // 创建 Redis 客户端
+      const redisClient = createClient({
+        socket: {
+          host: process.env.REDIS_HOST || "localhost",
+          port: parseInt(process.env.REDIS_PORT || "6379", 10),
+        },
+        password: process.env.REDIS_PASSWORD || undefined,
+      });
+
+      // 连接Redis（同步等待）
+      redisClient.connect().catch((err: any) => {
+        logger.error("Session Redis 连接失败，将使用内存存储", err);
+      });
+
+      // 创建 Redis 存储
+      const RedisStore = new (ConnectRedis as any)(session);
+      sessionStore = new RedisStore({ client: redisClient });
+
+      logger.info("使用Redis作为会话存储");
+    } catch (error) {
+      logger.error("Redis配置失败，使用内存存储", error as Error);
+      sessionStore = undefined; // 使用默认内存存储
+    }
+  } else {
+    logger.info("未配置Redis，使用内存存储");
+    sessionStore = undefined; // 使用默认内存存储
+  }
 
   // 配置会话中间件
   app.use(
     session({
-      store: new redisStore({ client: redisClient }),
+      store: sessionStore,
       secret: process.env.SESSION_SECRET || "default-secret-key",
       name: "ecommerce.session",
       resave: false,
