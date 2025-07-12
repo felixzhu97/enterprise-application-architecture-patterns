@@ -108,6 +108,12 @@ import { SessionStateExample } from "../session/session-state";
 // 测试模式导入
 import { ServiceStubExample } from "../testing/service-stub";
 
+// 新增模式导入
+import { InheritanceMappingDemo } from "../data/inheritance-mapping";
+import { ORMappingDemo } from "../data/object-relational-mapping";
+import { AdvancedConcurrencyDemo } from "../concurrency/advanced-concurrency";
+import { AdvancedBasePatternsDemo } from "../base/advanced-base-patterns";
+
 // TypeORM相关导入
 import { DataSource } from "typeorm";
 
@@ -144,6 +150,12 @@ export class PatternsShowcase {
   private pluginExample: PluginExample;
   private sessionStateExample: SessionStateExample;
   private serviceStubExample: ServiceStubExample;
+
+  // 新增模式演示实例
+  private inheritanceMappingDemo: InheritanceMappingDemo;
+  private orMappingDemo: ORMappingDemo;
+  private advancedConcurrencyDemo: AdvancedConcurrencyDemo;
+  private advancedBasePatternsDemo: AdvancedBasePatternsDemo;
 
   constructor(dataSource: DataSource) {
     this.dataSource = dataSource;
@@ -201,6 +213,15 @@ export class PatternsShowcase {
 
     // 测试模式
     this.serviceStubExample = new ServiceStubExample();
+
+    // 新增模式初始化（需要模拟数据库连接）
+    const mockDbConnection = this.dataSource as any; // 转换为兼容的连接对象
+    this.inheritanceMappingDemo = new InheritanceMappingDemo(mockDbConnection);
+    this.orMappingDemo = new ORMappingDemo(mockDbConnection);
+    this.advancedConcurrencyDemo = new AdvancedConcurrencyDemo(
+      mockDbConnection
+    );
+    this.advancedBasePatternsDemo = new AdvancedBasePatternsDemo();
   }
 
   /**
@@ -298,6 +319,15 @@ export class PatternsShowcase {
     // Identity Field
     console.log("\n🆔 Identity Field（标识字段）");
     this.identityFieldExample.demonstrateIdentityField();
+
+    // Advanced Base Patterns
+    console.log("\n🏗️  Advanced Base Patterns（高级基础模式）");
+    await this.advancedBasePatternsDemo.demonstrateRecordSet();
+    await this.advancedBasePatternsDemo.demonstrateSpecialCase();
+    await this.advancedBasePatternsDemo.demonstrateMoney();
+    await this.advancedBasePatternsDemo.demonstrateQuantity();
+    await this.advancedBasePatternsDemo.demonstrateRange();
+    await this.advancedBasePatternsDemo.demonstrateComprehensiveExample();
   }
 
   /**
@@ -358,6 +388,18 @@ export class PatternsShowcase {
     // Query Object
     console.log("\n🔍 Query Object（查询对象）");
     await this.queryObjectExample.demonstrateQueryObject();
+
+    // Inheritance Mapping
+    console.log("\n🏗️  Inheritance Mapping（继承映射）");
+    await this.inheritanceMappingDemo.demonstrateSingleTableInheritance();
+    await this.inheritanceMappingDemo.demonstrateClassTableInheritance();
+    await this.inheritanceMappingDemo.demonstrateConcreteTableInheritance();
+
+    // Object-Relational Mapping
+    console.log("\n🔗 Object-Relational Mapping（对象关系映射）");
+    await this.orMappingDemo.demonstrateForeignKeyMapping();
+    await this.orMappingDemo.demonstrateAssociationTableMapping();
+    await this.orMappingDemo.demonstrateEmbeddedValueMapping();
   }
 
   /**
@@ -400,6 +442,14 @@ export class PatternsShowcase {
     // Pessimistic Lock
     console.log("\n🔐 Pessimistic Lock（悲观锁）");
     await this.pessimisticLockManager.demonstratePessimisticLock();
+
+    // Advanced Concurrency Patterns
+    console.log("\n🏗️  Advanced Concurrency（高级并发模式）");
+    await this.advancedConcurrencyDemo.demonstrateCoarseGrainedLocking();
+    await this.advancedConcurrencyDemo.demonstrateTableLocking();
+    await this.advancedConcurrencyDemo.demonstrateImplicitLocking();
+    await this.advancedConcurrencyDemo.demonstrateDeadlockDetection();
+    await this.advancedConcurrencyDemo.demonstrateLockMonitoring();
   }
 
   /**
