@@ -121,3 +121,6 @@ temp/
 
 # Documentation
 docs/ 
+
+# Kiro
+.kiro
