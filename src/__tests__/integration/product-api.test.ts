@@ -4,6 +4,7 @@
  * 测试商品相关的API端点
  */
 
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from "supertest";
 import { Application } from "express";
 import { app } from "../../app";
